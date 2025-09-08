@@ -1,14 +1,16 @@
 package com.studybuddy.topic_trainer.configurations;
 
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
 
-@TestConfiguration
+@Configuration
+@Profile("dev")
 public class DevContainersConfig {
     @Bean
     @ServiceConnection
