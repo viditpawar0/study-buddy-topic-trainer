@@ -1,6 +1,6 @@
 spring:
   application:
-    name: subject-trainer
+    name: topic-trainer
   jpa:
     hibernate:
       ddl-auto: update

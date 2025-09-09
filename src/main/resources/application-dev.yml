@@ -2,7 +2,7 @@ server:
   port: 8082
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/sb_subject_trainer
+    url: jdbc:postgresql://localhost:5432/sb_topic_trainer
     username: springboot
     password: boot
     driver-class-name: org.postgresql.Driver
