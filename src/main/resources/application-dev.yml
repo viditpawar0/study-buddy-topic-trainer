@@ -3,8 +3,6 @@ server:
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/sb_topic_trainer
-    username: springboot
-    password: boot
     driver-class-name: org.postgresql.Driver
   ai:
     openai:
@@ -12,6 +10,8 @@ spring:
       api-key: not-required
   jpa:
     show-sql: true
+  config:
+    import: optional:configserver:http://localhost:8888
 eureka:
   client:
     service-url:
