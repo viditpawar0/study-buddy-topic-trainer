@@ -7,4 +7,8 @@ import java.util.List;
 
 public interface TopicRepository extends JpaRepository<Topic, Long> {
     List<Topic> findByChapterId(Long chapterId);
+
+    void deleteByChapterId(Long chapterId);
+
+    void deleteAllByChapterId(Long chapterId);
 }

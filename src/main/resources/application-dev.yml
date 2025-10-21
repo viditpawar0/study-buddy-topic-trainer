@@ -8,6 +8,9 @@ spring:
     openai:
       base-url: http://127.0.0.1:1234
       api-key: not-required
+      chat:
+        options:
+          model: gemma3
   jpa:
     show-sql: true
   config:

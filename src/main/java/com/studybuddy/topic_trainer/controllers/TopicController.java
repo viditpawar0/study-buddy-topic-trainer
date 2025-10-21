@@ -5,8 +5,6 @@ import com.studybuddy.topic_trainer.services.TopicService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("topics")
 public class TopicController {
@@ -17,9 +15,8 @@ public class TopicController {
     }
 
     @PostMapping
-    public ResponseEntity<Topic> post(@RequestBody Topic topic) {
-        System.out.println(topic.toString());
-        return ResponseEntity.ofNullable(topicService.create(topic));
+    public ResponseEntity<Iterable<Topic>> post(@RequestParam Long chapterId, @RequestBody Iterable<Topic> topic) {
+        return ResponseEntity.ofNullable(topicService.create(chapterId, topic));
     }
 
     @GetMapping("{id}")
@@ -28,13 +25,13 @@ public class TopicController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Topic>> getByChapterId(@RequestParam Long chapterId) {
+    public ResponseEntity<Iterable<Topic>> getByChapterId(@RequestParam Long chapterId) {
         return ResponseEntity.ok(topicService.retrieveByChapterId(chapterId));
     }
 
-    @PutMapping
-    public ResponseEntity<Topic> put(@RequestBody Topic topic) {
-        return ResponseEntity.ofNullable(topicService.update(topic));
+    @PutMapping("{id}")
+    public ResponseEntity<Topic> put(@RequestBody Topic topic, @PathVariable Long id) {
+        return ResponseEntity.ofNullable(topicService.update(topic, id));
     }
 
     @DeleteMapping("{id}")
@@ -44,8 +41,8 @@ public class TopicController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> delete(@RequestBody Topic topic) {
-        topicService.delete(topic);
+    public ResponseEntity<Void> deleteAllByChapterId(@RequestParam Long chapterId) {
+        topicService.deleteAllByChapterId(chapterId);
         return ResponseEntity.ok().build();
     }
 }
