@@ -6,7 +6,6 @@ import com.studybuddy.topic_trainer.entities.Topic;
 import com.studybuddy.topic_trainer.feign_clients.ChapterFeignClient;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.MessageType;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -41,11 +40,10 @@ public class TopicInitiationService {
             topicService.add(saved.getId().toString(), systemMessage);
             final var assistantMessage = new ChatMessage();
             assistantMessage.setMessageType(MessageType.ASSISTANT);
-            assistantMessage.setText(chatClient.prompt(
-                    Prompt.builder()
-                            .messages(topicService.get(saved.getId().toString()))
-                            .build()
-            ).stream().content().collectList().block().stream().collect(Collectors.joining()));
+            assistantMessage.setText(chatClient
+                    .prompt()
+                    .messages(topicService.get(saved.getId().toString()))
+                    .stream().content().collectList().block().stream().collect(Collectors.joining()));
             topicService.add(saved.getId().toString(), assistantMessage);
             status = Status.INITIALIZED;
         } catch (Exception e) {

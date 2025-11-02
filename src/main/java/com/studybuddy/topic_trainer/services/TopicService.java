@@ -43,10 +43,7 @@ public class TopicService implements ChatMemory {
             topic.setStatus(Status.INITIALIZING);
         });
         List<Topic> saved = topicRepository.saveAll(topics);
-        saved.forEach(topic -> {
-            topic.setStatus(Status.INITIALIZING);
-            topicInitiationService.initializeTopicAsync(topic);
-        });
+        saved.forEach(topicInitiationService::initializeTopicAsync);
         return saved;
     }
 

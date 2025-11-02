@@ -4,3 +4,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+eureka:
+  client:
+    service-url:
+      defaultZone: http://to-be-set-by-environment
