@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("scratch2")
+@RequestMapping("scratch1")
 public class ScratchController {
     @GetMapping
     public String scratch() {
