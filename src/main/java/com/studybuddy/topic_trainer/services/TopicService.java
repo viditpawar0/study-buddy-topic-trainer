@@ -62,6 +62,9 @@ public class TopicService implements ChatMemory {
         if (newTopic.getName() != null) {
             oldTopic.setName(newTopic.getName());
         }
+        if (newTopic.getStatus() != null) {
+            oldTopic.setStatus(newTopic.getStatus());
+        }
         return topicRepository.save(oldTopic);
     }
 
