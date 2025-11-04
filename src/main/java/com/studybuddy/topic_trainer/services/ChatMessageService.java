@@ -1,72 +1,72 @@
 package com.studybuddy.topic_trainer.services;
 
 import com.studybuddy.topic_trainer.entities.ChatMessage;
-import com.studybuddy.topic_trainer.repositories.ChatMessageRepository;
-import com.studybuddy.topic_trainer.utils.Utils;
+import com.studybuddy.topic_trainer.entities.Status;
+import com.studybuddy.topic_trainer.entities.Topic;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatMessageService {
-    private final ChatMessageRepository chatMessageRepository;
     private final TopicService topicService;
     private final ChatClient chatClient;
+    private final ChatMemoryRepository chatMemoryRepository;
 
-    public ChatMessageService(ChatMessageRepository chatMessageRepository,
-                              TopicService topicService,
-                              ChatModel chatModel) {
-        this.chatMessageRepository = chatMessageRepository;
+    public ChatMessageService(TopicService topicService,
+                              ChatModel chatModel,
+                              JdbcChatMemoryRepository chatMemoryRepository) {
         this.topicService = topicService;
         this.chatClient = ChatClient.create(chatModel);
+        this.chatMemoryRepository = chatMemoryRepository;
     }
 
-    public ChatMessage create(Long id, String text) {
-        var userChatMessage = new ChatMessage();
-        userChatMessage.setMessageType(MessageType.USER);
-        userChatMessage.setText(text);
-        topicService.add(id.toString(), userChatMessage);
-        var assistantChatMessage = new ChatMessage();
-        assistantChatMessage.setMessageType(MessageType.ASSISTANT);
-        assistantChatMessage.setText(chatClient.prompt(
-                Prompt.builder()
-                        .messages(topicService.get(id.toString()))
-                        .build()
-        ).stream().content().collectList().block().stream().collect(Collectors.joining()));
-        messages.add(assistantChatMessage);
-        chatMemoryRepository.saveAll(topicId.toString(), messages);
+    public Message create(Long topicId, String text) {
+        final var topic = topicService.assertEntityExists(topicId);
+        topic.setStatus(Status.GENERATING);
+        topicService.update(topicId, topic);
+        final ChatMessage assistantChatMessage;
+        try {
+            final List<Message> messages = chatMemoryRepository.findByConversationId(topicId.toString());
+            final var userChatMessage = new ChatMessage();
+            userChatMessage.setMessageType(MessageType.USER);
+            userChatMessage.setText(text);
+            messages.add(userChatMessage);
+            chatMemoryRepository.saveAll(topicId.toString(), messages);
+            assistantChatMessage = new ChatMessage();
+            assistantChatMessage.setMessageType(MessageType.ASSISTANT);
+            assistantChatMessage.setText(chatClient.prompt(
+                    Prompt.builder()
+                            .messages(chatMemoryRepository.findByConversationId(topicId.toString()))
+                            .build()
+            ).stream().content().collectList().block().stream().collect(Collectors.joining()));
+            messages.add(assistantChatMessage);
+            chatMemoryRepository.saveAll(topicId.toString(), messages);
+            topic.setStatus(Status.READY);
+        } catch (Exception e) {
+            topic.setStatus(Status.FAILED);
+            throw new RuntimeException(e);
+        } finally {
+            topicService.update(topicId, topic);
+        }
         return assistantChatMessage;
     }
 
-    public Optional<ChatMessage> retrieve(Long id) {
-        return chatMessageRepository.findById(id);
-    }
-
-    public Iterable<ChatMessage> retrieveByTopicId(Long topicId) {
+    public Iterable<Message> retrieveByTopicId(Long topicId) {
         topicService.assertEntityExists(topicId);
-        return chatMessageRepository.findByTopic_Id((Long.parseLong(topicId.toString())));
+        return chatMemoryRepository.findByConversationId(topicId.toString());
     }
 
-    public ChatMessage update(ChatMessage chatMessage, Long id) {
-        assertEntityExists(id);
-        return chatMessageRepository.save(chatMessage);
-    }
-
-    public void delete(ChatMessage chatMessage) {
-        assertEntityExists(chatMessage.getId());
-        chatMessageRepository.delete(chatMessage);
-    }
-
-    public void delete(Long id) {
-        assertEntityExists(id);
-        chatMessageRepository.deleteById(id);
-    }
-
-    public void assertEntityExists(Long chatMessageId) {
-        Utils.assertEntityExists(chatMessageId, chatMessageRepository);
+    public void deleteByTopicId(Long topicId) {
+        topicService.assertEntityExists(topicId);
+        chatMemoryRepository.deleteByConversationId(topicId.toString());
     }
 }

@@ -5,10 +5,13 @@ import com.studybuddy.topic_trainer.entities.Status;
 import com.studybuddy.topic_trainer.entities.Topic;
 import com.studybuddy.topic_trainer.feign_clients.ChapterFeignClient;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.studybuddy.topic_trainer.utils.Utils.getInitialSystemMessage;
@@ -18,18 +21,21 @@ public class TopicInitiationService {
     private final TopicService topicService;
     private final ChapterFeignClient chapterFeignClient;
     private final ChatClient chatClient;
+    private final ChatMemoryRepository chatMemoryRepository;
 
     public TopicInitiationService(TopicService topicService,
                                   ChapterFeignClient chapterFeignClient,
-                                  ChatClient chatClient) {
+                                  ChatClient chatClient,
+                                  JdbcChatMemoryRepository chatMemoryRepository) {
         this.topicService = topicService;
         this.chapterFeignClient = chapterFeignClient;
         this.chatClient = chatClient;
+        this.chatMemoryRepository = chatMemoryRepository;
     }
 
     @Async
     public void initializeTopicAsync(Topic saved) {
-        var status = Status.INITIALIZING;
+        Topic topic = topicService.assertEntityExists(saved.getId());
         try {
             final var chapter = chapterFeignClient.get(saved.getChapterId());
             final var subject = chapter.subject();
@@ -37,22 +43,22 @@ public class TopicInitiationService {
             final var chapterName = chapter.name();
             final var subjectName = subject.name();
             final var systemMessage = getInitialSystemMessage(topicName, chapterName, subjectName);
-            topicService.add(saved.getId().toString(), systemMessage);
+            final var initialUserMessage = new ChatMessage();
+            initialUserMessage.setMessageType(MessageType.USER);
+            initialUserMessage.setText("Hello");
             final var assistantMessage = new ChatMessage();
             assistantMessage.setMessageType(MessageType.ASSISTANT);
             assistantMessage.setText(chatClient
                     .prompt()
-                    .messages(topicService.get(saved.getId().toString()))
+                    .messages(systemMessage, initialUserMessage)
                     .stream().content().collectList().block().stream().collect(Collectors.joining()));
-            topicService.add(saved.getId().toString(), assistantMessage);
-            status = Status.INITIALIZED;
+            chatMemoryRepository.saveAll(saved.getId().toString(), List.of(systemMessage, initialUserMessage, assistantMessage));
+            topic.setStatus(Status.READY);
         } catch (Exception e) {
-            status = Status.FAILED;
+            topic.setStatus(Status.FAILED);
             throw new RuntimeException(e);
         } finally {
-            saved = topicService.retrieve(saved.getId()).get();
-            saved.setStatus(status);
-            topicService.update(saved, saved.getId());
+            topicService.update(saved.getId(), topic);
         }
     }
 }

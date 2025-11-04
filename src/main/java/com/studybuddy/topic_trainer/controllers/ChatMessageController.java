@@ -1,7 +1,7 @@
 package com.studybuddy.topic_trainer.controllers;
 
-import com.studybuddy.topic_trainer.entities.ChatMessage;
 import com.studybuddy.topic_trainer.services.ChatMessageService;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,17 +15,12 @@ public class ChatMessageController {
     }
 
     @PostMapping
-    public ResponseEntity<ChatMessage> post(@RequestParam Long topicId, @RequestBody String text) {
+    public ResponseEntity<Message> post(@RequestParam Long topicId, @RequestBody String text) {
         return ResponseEntity.ofNullable(chatMessageService.create(topicId, text));
     }
 
-    @GetMapping("{id}")
-    public ResponseEntity<ChatMessage> get(@PathVariable Long id) {
-        return ResponseEntity.of(chatMessageService.retrieve(id));
-    }
-
     @GetMapping
-    public ResponseEntity<Iterable<ChatMessage>> getByTopicId(@RequestParam Long topicId) {
+    public ResponseEntity<Iterable<Message>> getByTopicId(@RequestParam Long topicId) {
         return ResponseEntity.ofNullable(chatMessageService.retrieveByTopicId(topicId));
     }
 }

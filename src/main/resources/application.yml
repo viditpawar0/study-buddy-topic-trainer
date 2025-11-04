@@ -4,6 +4,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+  ai:
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
 eureka:
   client:
     service-url:

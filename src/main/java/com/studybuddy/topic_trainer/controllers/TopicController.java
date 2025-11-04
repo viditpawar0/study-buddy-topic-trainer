@@ -31,7 +31,7 @@ public class TopicController {
 
     @PutMapping("{id}")
     public ResponseEntity<Topic> put(@RequestBody Topic topic, @PathVariable Long id) {
-        return ResponseEntity.ofNullable(topicService.update(topic, id));
+        return ResponseEntity.ofNullable(topicService.update(id, topic));
     }
 
     @DeleteMapping("{id}")
