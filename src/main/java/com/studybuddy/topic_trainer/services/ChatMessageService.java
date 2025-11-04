@@ -36,8 +36,9 @@ public class ChatMessageService {
                 Prompt.builder()
                         .messages(topicService.get(id.toString()))
                         .build()
-        ).call().content());
-        topicService.add(id.toString(), assistantChatMessage);
+        ).stream().content().collectList().block().stream().collect(Collectors.joining()));
+        messages.add(assistantChatMessage);
+        chatMemoryRepository.saveAll(topicId.toString(), messages);
         return assistantChatMessage;
     }
 
