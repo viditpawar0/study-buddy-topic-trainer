@@ -2,7 +2,6 @@ package com.studybuddy.topic_trainer.services;
 
 import com.studybuddy.topic_trainer.entities.ChatMessage;
 import com.studybuddy.topic_trainer.entities.Status;
-import com.studybuddy.topic_trainer.entities.Topic;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
@@ -12,7 +11,6 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,7 +33,7 @@ public class ChatMessageService {
         topicService.update(topicId, topic);
         final ChatMessage assistantChatMessage;
         try {
-            final List<Message> messages = chatMemoryRepository.findByConversationId(topicId.toString());
+            final var messages = chatMemoryRepository.findByConversationId(topicId.toString());
             final var userChatMessage = new ChatMessage();
             userChatMessage.setMessageType(MessageType.USER);
             userChatMessage.setText(text);
@@ -62,7 +60,10 @@ public class ChatMessageService {
 
     public Iterable<Message> retrieveByTopicId(Long topicId) {
         topicService.assertEntityExists(topicId);
-        return chatMemoryRepository.findByConversationId(topicId.toString());
+        final var messages = chatMemoryRepository.findByConversationId(topicId.toString());
+        messages.removeFirst();
+        messages.removeFirst();
+        return messages;
     }
 
     public void deleteByTopicId(Long topicId) {
