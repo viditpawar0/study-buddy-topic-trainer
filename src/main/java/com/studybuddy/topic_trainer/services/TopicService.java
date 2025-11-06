@@ -75,7 +75,11 @@ public class TopicService {
     }
 
     public void startTraining(Long topicId) {
-        topicInitiationService.initializeTopicAsync(assertEntityExists(topicId));
+        final var topic = assertEntityExists(topicId);
+        if (topic.getStatus() != Status.UNINITIALIZED) {
+            throw new IllegalStateException("Topic is already initialized or in progress.");
+        }
+        topicInitiationService.initializeTopicAsync(topic);
     }
 
     public Topic assertEntityExists(Long topicId) {
