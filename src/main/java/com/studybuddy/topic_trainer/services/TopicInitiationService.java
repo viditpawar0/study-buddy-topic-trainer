@@ -34,12 +34,13 @@ public class TopicInitiationService {
     }
 
     @Async
-    public void initializeTopicAsync(Topic saved) {
-        Topic topic = topicService.assertEntityExists(saved.getId());
+    public void initializeTopicAsync(Topic topic) {
+        topic.setStatus(Status.INITIALIZING);
+        topicService.update(topic.getId(), topic);
         try {
-            final var chapter = chapterFeignClient.get(saved.getChapterId());
+            final var chapter = chapterFeignClient.get(topic.getChapterId());
             final var subject = chapter.subject();
-            final var topicName = saved.getName();
+            final var topicName = topic.getName();
             final var chapterName = chapter.name();
             final var subjectName = subject.name();
             final var systemMessage = getInitialSystemMessage(topicName, chapterName, subjectName);
@@ -52,13 +53,13 @@ public class TopicInitiationService {
                     .prompt()
                     .messages(systemMessage, initialUserMessage)
                     .stream().content().collectList().block().stream().collect(Collectors.joining()));
-            chatMemoryRepository.saveAll(saved.getId().toString(), List.of(systemMessage, initialUserMessage, assistantMessage));
+            chatMemoryRepository.saveAll(topic.getId().toString(), List.of(systemMessage, initialUserMessage, assistantMessage));
             topic.setStatus(Status.READY);
         } catch (Exception e) {
             topic.setStatus(Status.FAILED);
             throw new RuntimeException(e);
         } finally {
-            topicService.update(saved.getId(), topic);
+            topicService.update(topic.getId(), topic);
         }
     }
 }

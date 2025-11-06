@@ -45,4 +45,10 @@ public class TopicController {
         topicService.deleteAllByChapterId(chapterId);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("{topicId}:start-training")
+    public ResponseEntity<Void> startTraining(@PathVariable Long topicId) {
+        topicService.startTraining(topicId);
+        return ResponseEntity.ok().build();
+    }
 }

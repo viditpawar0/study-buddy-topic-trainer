@@ -32,11 +32,9 @@ public class TopicService {
         assertChapterExists(chapterId);
         topics.forEach(topic -> {
             topic.setChapterId(chapterId);
-            topic.setStatus(Status.INITIALIZING);
+            topic.setStatus(Status.UNINITIALIZED);
         });
-        List<Topic> saved = topicRepository.saveAll(topics);
-        saved.forEach(topicInitiationService::initializeTopicAsync);
-        return saved;
+        return topicRepository.saveAll(topics);
     }
 
 
@@ -74,6 +72,10 @@ public class TopicService {
     public void deleteAllByChapterId(Long chapterId) {
         assertChapterExists(chapterId);
         topicRepository.deleteAllByChapterId(chapterId);
+    }
+
+    public void startTraining(Long topicId) {
+        topicInitiationService.initializeTopicAsync(assertEntityExists(topicId));
     }
 
     public Topic assertEntityExists(Long topicId) {
