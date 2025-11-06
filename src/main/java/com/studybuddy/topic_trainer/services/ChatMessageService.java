@@ -29,6 +29,9 @@ public class ChatMessageService {
 
     public Message create(Long topicId, String text) {
         final var topic = topicService.assertEntityExists(topicId);
+        if (topic.getStatus() != Status.READY) {
+            throw new IllegalStateException("Topic is not ready for chat.");
+        }
         topic.setStatus(Status.GENERATING);
         topicService.update(topicId, topic);
         final ChatMessage assistantChatMessage;
@@ -59,7 +62,10 @@ public class ChatMessageService {
     }
 
     public Iterable<Message> retrieveByTopicId(Long topicId) {
-        topicService.assertEntityExists(topicId);
+        final var topic = topicService.assertEntityExists(topicId);
+        if (topic.getStatus() == Status.UNINITIALIZED || topic.getStatus() == Status.INITIALIZING) {
+            throw new IllegalStateException("Topic is not initialized yet.");
+        }
         final var messages = chatMemoryRepository.findByConversationId(topicId.toString());
         messages.removeFirst();
         messages.removeFirst();

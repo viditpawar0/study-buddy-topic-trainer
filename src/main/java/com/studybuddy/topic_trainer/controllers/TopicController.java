@@ -46,9 +46,9 @@ public class TopicController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("{topicId}:start-training")
-    public ResponseEntity<Void> startTraining(@PathVariable Long topicId) {
-        topicService.startTraining(topicId);
+    @PostMapping("{id}:start-training")
+    public ResponseEntity<Void> startTraining(@PathVariable Long id) {
+        topicService.startTraining(id);
         return ResponseEntity.ok().build();
     }
 }
